@@ -1,4 +1,4 @@
-# Budgeting App API
+# MAJO Budgeting App API
 
 A FastAPI-based budgeting application backend.
 
@@ -37,8 +37,9 @@ python -m app.main
 ## Environment Variables
 
 Copy `.env.example` to `.env` file and update with your settings:
-    ```bash
-   cp .env.example .env
+```bash
+cp .env.example .env
+```
 
 - DATABASE_URL - Database connection string
 - SECRET_KEY - JWT secret key
