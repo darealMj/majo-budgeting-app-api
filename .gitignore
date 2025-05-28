@@ -52,3 +52,17 @@ logs/
 
 # Claude Setup
 setup_files/
+
+# Security Reports
+bandit-report.json
+safety-report.json
+*.security
+
+# Test Coverage Reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Other generated files
+.pytest_cache/
