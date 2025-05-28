@@ -10,6 +10,7 @@ A FastAPI-based budgeting application backend.
 ```
 python -m venv venv
 venv\Scripts\activate  # Windows
+source venv/bin/activate # Mac
 ```
 
 3. Install dependencies:
