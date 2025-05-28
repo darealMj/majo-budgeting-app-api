@@ -23,6 +23,8 @@ share/python-wheels/
 
 # Environment
 .env
+.env.local
+.env.production
 .venv
 env/
 venv/
