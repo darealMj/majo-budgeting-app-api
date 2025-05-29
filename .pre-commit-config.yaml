@@ -1,0 +1,94 @@
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-toml
+      - id: debug-statements
+
+  # Black code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=88]
+
+  # isort import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: [--profile=black]
+
+  # Flake8 linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-import-order
+          - flake8-bugbear
+
+  # MyPy type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-requests
+          - sqlalchemy[mypy]
+        args: [--ignore-missing-imports, --show-error-codes]
+        files: ^app/
+
+  # Bandit security linting
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: [--quiet]
+        types: [python]
+        exclude: ^tests/
+
+  # Safety dependency checking (manual only - can be slow)
+  - repo: local
+    hooks:
+      - id: safety
+        name: safety
+        entry: safety
+        language: system
+        args: [check]
+        pass_filenames: false
+        stages: [manual]
+
+  # Pytest (manual only - can be slow for large test suites)
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        args: [--tb=short, -q]
+        pass_filenames: false
+        stages: [manual]
+
+  # Custom hook to check requirements files are in sync
+  - repo: local
+    hooks:
+      - id: requirements-txt-fixer
+        name: Fix requirements.txt
+        entry: python
+        language: system
+        args: [-c, "import sys; lines = open('requirements.txt').readlines(); open('requirements.txt', 'w').writelines(sorted(set(lines)))"]
+        files: requirements.*\.txt$
+
+# Configuration for specific hooks
+default_stages: [commit]
+fail_fast: false
+minimum_pre_commit_version: "3.0.0"

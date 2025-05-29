@@ -1,0 +1,25 @@
+[flake8]
+max-line-length = 88
+# E203: whitespace before ':' (conflicts with black)
+# E501: line too long (handled by black)
+# W503: line break before binary operator (conflicts with black)
+# F401: imported but unused (handled by isort)
+# D: all docstring errors - we use isort for import management instead of requiring docstrings. TODO: renable
+# I: all import order errors - we use isort for import management instead of flake8-import-order
+extend-ignore =
+    E203,
+    E501,
+    W503,
+    F401,
+    D,
+    I
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    migrations,
+    .pytest_cache
+per-file-ignores =
+    __init__.py:F401
+    */migrations/*:E501,F401
