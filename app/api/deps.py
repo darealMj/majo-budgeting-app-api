@@ -13,8 +13,8 @@ security = HTTPBearer()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials,
 ) -> Dict[str, Union[int, str]]:
-    """
-    Mock authentication dependency.
+    """Mock authentication dependency.
+
     TODO: Implement proper JWT validation in future PR.
     """
     # For now, return mock user data
@@ -23,10 +23,10 @@ async def get_current_user(
 
 
 def get_current_active_user(
-    current_user: Dict[str, Union[int, str]]
+    current_user: Dict[str, Union[int, str]],
 ) -> Dict[str, Union[int, str]]:
-    """
-    Dependency to get current active user.
+    """Dependency to get current active user.
+
     Currently returns mock user data - will be replaced with real JWT implementation.
     """
     # TODO: Add user active/inactive status check when User model is integrated
@@ -39,8 +39,8 @@ def get_current_active_user(
 
 
 def get_db_session() -> Generator[Session, None, None]:
-    """
-    Dependency to get database session.
+    """Dependency to get database session.
+
     Ensures proper session cleanup after request.
     """
     return get_db()

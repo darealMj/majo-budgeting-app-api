@@ -2,11 +2,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 
 class TransactionType(str, Enum):
-    """Transaction type classifications"""
+    """Transaction type classifications."""
 
     INCOME = "income"
     EXPENSE = "expense"
@@ -14,7 +14,7 @@ class TransactionType(str, Enum):
 
 
 class CategoryType(str, Enum):
-    """Transaction categories"""
+    """Transaction categories."""
 
     # Housing
     HOUSING = "housing"
@@ -64,7 +64,7 @@ class CategoryType(str, Enum):
 
 
 class TransactionBase(BaseModel):
-    """Base transaction schema with common fields"""
+    """Base transaction schema with common fields."""
 
     amount: float = Field(..., description="Transaction amount")
     description: str = Field(
@@ -75,21 +75,26 @@ class TransactionBase(BaseModel):
 
 
 class TransactionCreate(TransactionBase):
-    """Schema for creating a new transaction"""
+    """Schema for creating a new transaction."""
 
     account_id: int = Field(..., description="ID of the associated account")
     date: Optional[datetime] = Field(
         None, description="Transaction date (defaults to now)"
     )
 
-    @validator("date", pre=True, always=True)
+    @field_validator("date")
+    @classmethod
     def set_date(cls, v: Optional[datetime]) -> datetime:
-        """Set transaction date to now if not provided"""
+        """Set transaction date to now if not provided."""
         return v or datetime.utcnow()
 
-    @validator("amount")
-    def validate_amount(cls, v: float, values: dict) -> float:
-        """Ensure expense amounts are negative and income amounts are positive"""
+    @field_validator("amount")
+    @classmethod
+    def validate_amount(cls, v: float, info: ValidationInfo) -> float:
+        """Ensure expense amounts are negative and income amounts are
+        positive."""
+        # Access other field values through info.data
+        values = info.data if info.data else {}
         if "transaction_type" in values:
             if values["transaction_type"] == TransactionType.EXPENSE:
                 return -abs(v)  # Ensure expenses are negative
@@ -97,11 +102,14 @@ class TransactionCreate(TransactionBase):
                 return abs(v)  # Ensure income is positive
         return v
 
-    @validator("category")
+    @field_validator("category")
+    @classmethod
     def validate_category_type_match(
-        cls, v: CategoryType, values: dict
+        cls, v: CategoryType, info: ValidationInfo
     ) -> CategoryType:
-        """Validate that category matches transaction type"""
+        """Validate that category matches transaction type."""
+        # Access other field values through info.data
+        values = info.data if info.data else {}
         if "transaction_type" in values:
             income_categories = {
                 CategoryType.SALARY,
@@ -109,6 +117,7 @@ class TransactionCreate(TransactionBase):
                 CategoryType.INVESTMENT,
                 CategoryType.BONUS,
             }
+
             if values["transaction_type"] == TransactionType.INCOME:
                 if v not in income_categories:
                     raise ValueError(
@@ -123,7 +132,7 @@ class TransactionCreate(TransactionBase):
 
 
 class TransactionUpdate(BaseModel):
-    """Schema for updating transaction information"""
+    """Schema for updating transaction information."""
 
     amount: Optional[float] = None
     description: Optional[str] = Field(None, min_length=1, max_length=255)
@@ -133,19 +142,18 @@ class TransactionUpdate(BaseModel):
 
 
 class TransactionResponse(TransactionBase):
-    """Schema for transaction API responses"""
+    """Schema for transaction API responses."""
 
     id: int
     account_id: int
     date: datetime
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionSummary(BaseModel):
-    """Schema for transaction summary data"""
+    """Schema for transaction summary data."""
 
     total_income: float
     total_expenses: float
