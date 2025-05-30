@@ -1,14 +1,14 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from app.schemas.transaction import CategoryType
 
 
 class BudgetPeriod(str, Enum):
-    """Budget period types"""
+    """Budget period types."""
 
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -18,7 +18,7 @@ class BudgetPeriod(str, Enum):
 
 
 class BudgetStatus(str, Enum):
-    """Budget status types"""
+    """Budget status types."""
 
     ACTIVE = "active"
     INACTIVE = "inactive"
@@ -27,7 +27,7 @@ class BudgetStatus(str, Enum):
 
 
 class BudgetBase(BaseModel):
-    """Base budget schema with common fields"""
+    """Base budget schema with common fields."""
 
     name: str = Field(..., min_length=1, max_length=100, description="Budget name")
     category: CategoryType = Field(..., description="Budget category")
@@ -36,7 +36,7 @@ class BudgetBase(BaseModel):
 
 
 class BudgetCreate(BudgetBase):
-    """Schema for creating a new budget"""
+    """Schema for creating a new budget."""
 
     start_date: Optional[datetime] = Field(
         None, description="Budget start date (defaults to beginning of current month)"
@@ -45,22 +45,26 @@ class BudgetCreate(BudgetBase):
         None, description="Budget end date (calculated based on period if not provided)"
     )
 
-    @validator("start_date", pre=True, always=True)
+    @field_validator("start_date")
+    @classmethod
     def set_start_date(cls, v: Optional[datetime]) -> datetime:
-        """Set start date to beginning of current month if not provided"""
+        """Set start date to beginning of current month if not provided."""
         if v is None:
             now = datetime.utcnow()
             return datetime(now.year, now.month, 1)
         return v
 
-    @validator("end_date", pre=True, always=True)
+    @field_validator("end_date")
+    @classmethod
     def calculate_end_date(
-        cls, v: Optional[datetime], values: dict
-    ) -> Optional[datetime]:
-        """Calculate end date based on period if not provided"""
+        cls, v: Optional[datetime], info: ValidationInfo
+    ) -> Union[datetime, None]:
+        """Calculate end date based on period if not provided."""
         if v is not None:
             return v
 
+        # Access other field values through info.data
+        values = info.data if info.data else {}
         start_date: Optional[datetime] = values.get("start_date")
         period: Optional[BudgetPeriod] = values.get("period")
 
@@ -75,8 +79,8 @@ class BudgetCreate(BudgetBase):
                         start_date.year, start_date.month + 1, 1
                     ) - timedelta(days=1)
             elif period == BudgetPeriod.QUARTERLY:
-                month = start_date.month
-                quarter_end_month = ((month - 1) // 3 + 1) * 3
+                month: int = start_date.month
+                quarter_end_month: int = ((month - 1) // 3 + 1) * 3
                 if quarter_end_month == 12:
                     return datetime(start_date.year + 1, 1, 1) - timedelta(days=1)
                 else:
@@ -88,9 +92,10 @@ class BudgetCreate(BudgetBase):
 
         return None
 
-    @validator("category")
+    @field_validator("category")
+    @classmethod
     def validate_expense_category(cls, v: CategoryType) -> CategoryType:
-        """Ensure budget category is appropriate for expenses"""
+        """Ensure budget category is appropriate for expenses."""
         income_categories = {
             CategoryType.SALARY,
             CategoryType.FREELANCE,
@@ -103,7 +108,7 @@ class BudgetCreate(BudgetBase):
 
 
 class BudgetUpdate(BaseModel):
-    """Schema for updating budget information"""
+    """Schema for updating budget information."""
 
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     amount: Optional[float] = Field(None, gt=0)
@@ -114,7 +119,7 @@ class BudgetUpdate(BaseModel):
 
 
 class BudgetResponse(BudgetBase):
-    """Schema for budget API responses"""
+    """Schema for budget API responses."""
 
     id: int
     start_date: datetime
@@ -122,12 +127,11 @@ class BudgetResponse(BudgetBase):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BudgetAnalysis(BaseModel):
-    """Schema for budget analysis data"""
+    """Schema for budget analysis data."""
 
     budget_id: int
     budget_name: str
@@ -139,12 +143,17 @@ class BudgetAnalysis(BaseModel):
     status: BudgetStatus
     days_remaining: Optional[int]
 
-    @validator("status", pre=True, always=True)
-    def determine_status(cls, v: Optional[BudgetStatus], values: dict) -> BudgetStatus:
-        """Automatically determine budget status based on spending"""
+    @field_validator("status")
+    @classmethod
+    def determine_status(
+        cls, v: Optional[BudgetStatus], info: ValidationInfo
+    ) -> BudgetStatus:
+        """Automatically determine budget status based on spending."""
         if v is not None:
             return v
 
+        # Access other field values through info.data
+        values = info.data if info.data else {}
         percentage_used = values.get("percentage_used", 0)
         remaining = values.get("remaining", 0)
 
@@ -157,7 +166,7 @@ class BudgetAnalysis(BaseModel):
 
 
 class BudgetSummary(BaseModel):
-    """Schema for overall budget summary"""
+    """Schema for overall budget summary."""
 
     total_budgets: int
     active_budgets: int

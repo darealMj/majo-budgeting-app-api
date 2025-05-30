@@ -1,6 +1,6 @@
 import os
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -8,19 +8,21 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
-    # fallback on localdev SQLite instead of prod PostGreSQL
+    # Server configuration
+    HOST: str = "127.0.0.1"
+    PORT: int = 8000
+
+    # Database configuration
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./budgeting.db")
+
+    # Security configuration
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # Server settings
-    HOST: str = os.getenv("HOST", "127.0.0.1")
-    PORT: int = int(os.getenv("PORT", "8000"))
-
+    # CORS configuration
     CORS_ORIGINS: list = ["*"]
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()

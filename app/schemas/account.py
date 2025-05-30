@@ -2,11 +2,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AccountType(str, Enum):
-    """Supported account types"""
+    """Supported account types."""
 
     CHECKING = "checking"
     SAVINGS = "savings"
@@ -17,20 +17,20 @@ class AccountType(str, Enum):
 
 
 class AccountBase(BaseModel):
-    """Base account schema with common fields"""
+    """Base account schema with common fields."""
 
     name: str = Field(..., min_length=1, max_length=100, description="Account name")
     account_type: AccountType = Field(..., description="Type of financial account")
 
 
 class AccountCreate(AccountBase):
-    """Schema for creating a new account"""
+    """Schema for creating a new account."""
 
     balance: Optional[float] = Field(0.0, description="Initial account balance")
 
 
 class AccountUpdate(BaseModel):
-    """Schema for updating account information"""
+    """Schema for updating account information."""
 
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     account_type: Optional[AccountType] = None
@@ -38,12 +38,11 @@ class AccountUpdate(BaseModel):
 
 
 class AccountResponse(AccountBase):
-    """Schema for account API responses"""
+    """Schema for account API responses."""
 
     id: int
     balance: float
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

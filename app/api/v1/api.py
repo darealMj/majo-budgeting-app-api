@@ -2,6 +2,8 @@ from typing import Dict
 
 from fastapi import APIRouter
 
+from app.core.config import settings
+
 # Import endpoint routers (will be added in subsequent PRs)
 # from app.api.v1.endpoints import users, accounts, transactions, budgets, analytics
 
@@ -20,4 +22,8 @@ async def api_root() -> Dict[str, str]:
     """
     API root endpoint - provides basic API information.
     """
-    return {"message": "Budgeting App API v1", "version": "1.0.0", "status": "active"}
+    return {
+        "message": f"{settings.PROJECT_NAME} v1",
+        "version": settings.VERSION,
+        "status": "active",
+    }
