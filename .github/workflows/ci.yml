@@ -85,13 +85,13 @@ jobs:
         context: .
         file: ./Dockerfile
         push: false
-        tags: budgeting-api:test
+        tags: majo-budgeting-app-api:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
     - name: Test Docker image
       run: |
-        docker run --rm -d --name test-app -p 8000:8000 budgeting-api:test
+        docker run --rm -d --name test-app -p 8000:8000 majo-budgeting-app-api:test
         sleep 10
         curl -f http://localhost:8000/health || exit 1
         docker stop test-app
