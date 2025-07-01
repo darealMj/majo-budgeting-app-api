@@ -41,10 +41,10 @@ clean:			## Clean up generated files
 	rm -rf *.egg-info/
 
 docker-build:		## Build Docker image
-	docker build -t majo-budgeting-api:latest .
+	docker build -t majo-budgeting-app-api:latest .
 
 docker-test:		## Test Docker image
-	docker run --rm -d --name test-app -p 8000:8000 majo-budgeting-api:latest
+	docker run --rm -d --name test-app -p 8000:8000 majo-budgeting-app-api:latest
 	sleep 5
 	curl -f http://localhost:8000/health
 	docker stop test-app
